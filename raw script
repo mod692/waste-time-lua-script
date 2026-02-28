@@ -6,6 +6,88 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 
+-- ═══════════════════════════════════════════════════════════
+-- НАСТРОЙКИ СОЗДАТЕЛЯ
+-- ═══════════════════════════════════════════════════════════
+local CREATOR_USER_ID = 5682494405 -- User ID создателя скрипта
+local CREATOR_PROFILE_URL = "https://www.roblox.com/users/" .. CREATOR_USER_ID .. "/profile"
+-- ═══════════════════════════════════════════════════════════
+
+-- Флаги
+local ScriptEnabled = true
+local AccessGranted = true
+
+-- Настройки
+local Settings = {
+    AutoRedeemCodes = false
+}
+
+-- Функция проверки подписки/друзей
+local function CheckIfFollowing()
+    print("🔍 Checking if user is following creator...")
+    
+    -- Метод 1: Проверка через HttpGet (если доступен)
+    if game.HttpGet then
+        local success, result = pcall(function()
+            local url = "https://friends.roblox.com/v1/users/" .. LocalPlayer.UserId .. "/friends"
+            local response = game:HttpGet(url)
+            local HttpService = game:GetService("HttpService")
+            local data = HttpService:JSONDecode(response)
+            
+            if data and data.data then
+                for _, friend in pairs(data.data) do
+                    if friend.id == CREATOR_USER_ID then
+                        print("✅ User is friends with creator!")
+                        return true
+                    end
+                end
+            end
+            
+            return true
+        end)
+        
+        if success and result then
+            return true
+        end
+        
+        -- Проверка подписчиков
+        local success2, result2 = pcall(function()
+            local url = "https://friends.roblox.com/v1/users/" .. CREATOR_USER_ID .. "/followers"
+            local response = game:HttpGet(url)
+            local HttpService = game:GetService("HttpService")
+            local data = HttpService:JSONDecode(response)
+            
+            if data and data.data then
+                for _, follower in pairs(data.data) do
+                    if follower.id == LocalPlayer.UserId then
+                        print("✅ User is following creator!")
+                        return true
+                    end
+                end
+            end
+            
+            return false
+        end)
+        
+        if success2 and result2 then
+            return true
+        end
+    end
+    
+    -- Метод 2: Проверка через LocalPlayer.IsFriendsWith (встроенный метод)
+    local success3, result3 = pcall(function()
+        return LocalPlayer:IsFriendsWith(CREATOR_USER_ID)
+    end)
+    
+    if success3 and result3 then
+        print("✅ User is friends with creator (IsFriendsWith)!")
+        return true
+    end
+    
+    print("❌ User is not following/friends with creator")
+    return false
+end
+
 -- База актуальных кодов (обновлено: Февраль 2026)
 local ActiveCodes = {
     "gullible",
